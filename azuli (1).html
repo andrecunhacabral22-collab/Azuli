@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Azuli — Torre de Controle da Marca</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#050B1E; --bg2:#081231;
+  --azul-deep:#0A1B4A; --azul:#2EA8FF; --azul-glow:rgba(46,168,255,.55);
+  --azul-light:rgba(46,168,255,.12);
+  --amarelo:#FFD34D; --verde:#34E58A; --vermelho:#FF5C66;
+  --ink:#E8F1FC; --muted:#8FA6C8;
+  --card:rgba(13,24,54,.72); --card-solid:#0C1737;
+  --line:rgba(96,160,255,.16); --line-strong:rgba(96,160,255,.35);
+  --radius:16px;
+  --shadow:0 10px 40px rgba(2,8,26,.6);
+  --font-display:'Sora',system-ui,sans-serif;
+  --font-body:'Inter',system-ui,sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{font-family:var(--font-body);color:var(--ink);-webkit-font-smoothing:antialiased;
+  background:var(--bg);
+  background-image:
+    radial-gradient(900px 500px at 80% -10%,rgba(46,168,255,.14),transparent 60%),
+    radial-gradient(700px 420px at -10% 100%,rgba(52,229,138,.08),transparent 60%),
+    linear-gradient(rgba(96,160,255,.05) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(96,160,255,.05) 1px,transparent 1px);
+  background-size:auto,auto,44px 44px,44px 44px;
+  background-attachment:fixed}
+h1,h2,h3,.display{font-family:var(--font-display)}
+button{font-family:var(--font-body);cursor:pointer;border:none}
+input,textarea,select{font-family:var(--font-body);font-size:15px;color:var(--ink)}
+.hidden{display:none!important}
+::selection{background:rgba(46,168,255,.35)}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:rgba(96,160,255,.25);border-radius:100px;border:2px solid var(--bg)}
+::-webkit-scrollbar-thumb:hover{background:rgba(96,160,255,.45)}
+
+.strip{height:3px;background:linear-gradient(90deg,var(--azul) 0 55%,var(--amarelo) 55% 78%,var(--verde) 78% 100%);
+  box-shadow:0 0 18px var(--azul-glow)}
+.topbar{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;
+  padding:12px 24px;background:rgba(5,11,30,.82);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px}
+.brand svg{filter:drop-shadow(0 0 10px rgba(46,168,255,.5))}
+.brand .name{font-family:var(--font-display);font-weight:800;font-size:20px;color:#fff;letter-spacing:-.02em}
+.brand .tag{font-family:var(--font-mono);font-size:9.5px;color:var(--azul);letter-spacing:.22em;text-transform:uppercase}
+.userchip{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);flex-wrap:wrap}
+.userchip b{color:#fff}
+.btn-ghost{background:transparent;color:var(--azul);font-weight:600;font-size:13px;padding:8px 14px;border-radius:10px;border:1px solid transparent}
+.btn-ghost:hover{background:var(--azul-light);border-color:var(--line-strong)}
+
+.shell{max-width:1080px;margin:0 auto;padding:32px 20px 80px}
+
+/* ===== COVER ===== */
+.cover{min-height:calc(100vh - 60px);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(120% 90% at 50% 115%,#0C2C6E 0%,#050B1E 55%,#02040D 100%)}
+.aurora{position:absolute;border-radius:50%;filter:blur(80px);opacity:.5;animation:breathe 9s ease-in-out infinite alternate;pointer-events:none}
+@keyframes breathe{from{transform:scale(1) translateY(0)}to{transform:scale(1.28) translateY(-34px)}}
+.stars{position:absolute;inset:0;pointer-events:none;
+  background-image:radial-gradient(1.5px 1.5px at 12% 20%,rgba(255,255,255,.8) 50%,transparent 51%),
+  radial-gradient(1px 1px at 70% 12%,rgba(255,255,255,.55) 50%,transparent 51%),
+  radial-gradient(1.5px 1.5px at 85% 35%,rgba(255,255,255,.65) 50%,transparent 51%),
+  radial-gradient(1px 1px at 40% 8%,rgba(255,255,255,.5) 50%,transparent 51%),
+  radial-gradient(1px 1px at 25% 42%,rgba(255,255,255,.45) 50%,transparent 51%),
+  radial-gradient(1.5px 1.5px at 58% 28%,rgba(255,255,255,.6) 50%,transparent 51%)}
+.cover::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(rgba(96,160,255,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(96,160,255,.06) 1px,transparent 1px);
+  background-size:56px 56px;mask-image:radial-gradient(70% 60% at 50% 45%,black,transparent)}
+.cover-inner{position:relative;text-align:center;padding:60px 22px;max-width:880px;z-index:2}
+.cover-eyebrow{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line-strong);color:#BFE0FF;
+  font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;padding:9px 18px;border-radius:100px;
+  background:rgba(46,168,255,.07);backdrop-filter:blur(6px);box-shadow:0 0 22px rgba(46,168,255,.15) inset}
+.cover-title{font-family:var(--font-display);font-weight:800;font-size:clamp(64px,14vw,132px);letter-spacing:-.04em;line-height:1;margin:26px 0 10px;
+  background:linear-gradient(92deg,#6FC3FF 0%,#FFFFFF 38%,#7DF0B4 70%,#FFE066 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 10px 46px rgba(46,168,255,.5))}
+.cover-sub{color:#B9CFEC;font-size:clamp(16px,2.6vw,20px);font-weight:500;line-height:1.65;max-width:660px;margin:0 auto}
+.cover-sub b{color:#fff}
+.cover-cta{margin-top:38px;display:inline-flex;align-items:center;gap:12px;background:linear-gradient(92deg,#1E7FE0,var(--azul));
+  color:#fff;font-family:var(--font-display);font-weight:700;font-size:17px;padding:17px 38px;border-radius:100px;
+  border:1px solid rgba(150,210,255,.5);
+  box-shadow:0 0 34px var(--azul-glow),inset 0 1px 0 rgba(255,255,255,.35);transition:transform .15s,box-shadow .15s}
+.cover-cta:hover{transform:translateY(-3px) scale(1.02);box-shadow:0 0 55px var(--azul-glow),inset 0 1px 0 rgba(255,255,255,.35)}
+.cover-stats{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:44px}
+.cstat{border:1px solid var(--line);background:rgba(13,24,54,.55);backdrop-filter:blur(8px);
+  border-radius:14px;padding:12px 20px;color:#AFC6E6;font-size:12.5px;font-family:var(--font-mono)}
+.cstat b{display:block;font-family:var(--font-display);font-size:20px;color:var(--azul);margin-bottom:2px;text-shadow:0 0 14px var(--azul-glow)}
+.fly{position:absolute;top:22%;left:-12%;font-size:30px;animation:fly 17s linear infinite;z-index:1;filter:drop-shadow(0 0 14px rgba(46,168,255,.6))}
+@keyframes fly{from{transform:translateX(0) translateY(0) rotate(-4deg)}50%{transform:translateX(60vw) translateY(-40px) rotate(2deg)}to{transform:translateX(125vw) translateY(-10px) rotate(-3deg)}}
+@media (prefers-reduced-motion:reduce){.aurora,.fly,.cloud,.sweep{animation:none}}
+
+/* ===== LOGIN ===== */
+.sky{min-height:calc(100vh - 60px);display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(100% 80% at 50% 0%,#0C2C6E 0%,#050B1E 60%,#02040D 100%);position:relative;overflow:hidden}
+.cloud{position:absolute;background:rgba(120,180,255,.06);border-radius:100px;filter:blur(3px);animation:drift 60s linear infinite}
+@keyframes drift{from{transform:translateX(-20vw)}to{transform:translateX(120vw)}}
+.login-card{position:relative;width:min(430px,92vw);background:var(--card);border:1px solid var(--line-strong);
+  border-radius:22px;box-shadow:var(--shadow),0 0 60px rgba(46,168,255,.12);backdrop-filter:blur(16px);padding:36px}
+.login-card h1{font-size:26px;color:#fff;letter-spacing:-.02em;margin:14px 0 4px}
+.login-card p.sub{color:var(--muted);font-size:14px;margin-bottom:22px}
+.field{margin-bottom:14px}
+.field label{display:block;font-family:var(--font-mono);font-size:10.5px;font-weight:600;color:var(--azul);text-transform:uppercase;letter-spacing:.14em;margin-bottom:6px}
+.field input,.field textarea,.field select{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:12px;
+  background:rgba(5,12,32,.7);outline:none;transition:border .15s,box-shadow .15s}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--azul);box-shadow:0 0 0 3px rgba(46,168,255,.18),0 0 18px rgba(46,168,255,.15)}
+.field select option{background:var(--card-solid);color:var(--ink)}
+.btn-primary{width:100%;padding:14px;border-radius:12px;background:linear-gradient(92deg,#1E7FE0,var(--azul));color:#fff;font-weight:700;font-size:15px;
+  border:1px solid rgba(150,210,255,.4);box-shadow:0 0 22px rgba(46,168,255,.3);transition:transform .12s,box-shadow .15s}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 0 34px rgba(46,168,255,.5)}
+.switch-mode{text-align:center;margin-top:16px;font-size:13px;color:var(--muted)}
+.switch-mode a{color:var(--azul);font-weight:600;cursor:pointer;text-decoration:none}
+.badge-internal{display:inline-flex;align-items:center;gap:6px;background:var(--azul-light);color:var(--azul);border:1px solid var(--line-strong);
+  font-family:var(--font-mono);font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;padding:6px 12px;border-radius:100px}
+.login-err{margin-top:12px;font-size:13px;color:var(--vermelho);font-weight:600;min-height:18px}
+
+/* ===== SEÇÕES ===== */
+.section-eyebrow{font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--azul)}
+.section-eyebrow::before{content:"▮ ";color:var(--verde)}
+.section-title{font-size:clamp(24px,4vw,34px);color:#fff;letter-spacing:-.02em;margin:6px 0 8px}
+.section-sub{color:var(--muted);font-size:15px;max-width:640px;line-height:1.65}
+
+.role-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-top:28px}
+.role-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:30px;box-shadow:var(--shadow);
+  cursor:pointer;transition:transform .15s,border-color .15s,box-shadow .15s;text-align:left;backdrop-filter:blur(12px);position:relative;overflow:hidden}
+.role-card::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--azul),transparent);opacity:0;transition:opacity .2s}
+.role-card:hover{transform:translateY(-4px);border-color:var(--line-strong);box-shadow:var(--shadow),0 0 34px rgba(46,168,255,.18)}
+.role-card:hover::before{opacity:1}
+.role-card .icon{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:16px;border:1px solid var(--line)}
+.role-card h3{font-size:19px;color:#fff;margin-bottom:8px}
+.role-card p{font-size:14px;color:var(--muted);line-height:1.55}
+.mini-links{display:flex;gap:12px;margin-top:22px;flex-wrap:wrap}
+.mini-link{display:inline-flex;align-items:center;gap:8px;background:var(--card);box-shadow:var(--shadow);color:var(--ink);
+  border-radius:12px;padding:12px 18px;font-size:14px;font-weight:600;border:1px solid var(--line);backdrop-filter:blur(10px)}
+.mini-link:hover{border-color:var(--azul);box-shadow:var(--shadow),0 0 22px rgba(46,168,255,.15)}
+
+.kb-layout{display:grid;grid-template-columns:1fr;gap:20px;margin-top:26px}
+@media(min-width:820px){.kb-layout{grid-template-columns:1.4fr 1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px;backdrop-filter:blur(12px)}
+.card h3{color:#fff!important}
+.kb-entry{display:flex;gap:12px;align-items:flex-start;padding:14px;border:1px solid var(--line);border-radius:12px;margin-bottom:10px;background:rgba(5,12,32,.5)}
+.kb-entry .cat{flex-shrink:0;font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:4px 10px;border-radius:100px;border:1px solid}
+.kb-entry p{font-size:13.5px;line-height:1.55;color:var(--ink)}
+.kb-entry .del{margin-left:auto;flex-shrink:0;background:transparent;color:#54688C;font-size:16px;padding:2px 6px;border-radius:6px}
+.kb-entry .del:hover{color:var(--vermelho);background:rgba(255,92,102,.12)}
+.cat-valores{background:rgba(52,229,138,.12);color:var(--verde);border-color:rgba(52,229,138,.35)}
+.cat-visual{background:rgba(255,211,77,.12);color:var(--amarelo);border-color:rgba(255,211,77,.35)}
+.cat-tom{background:var(--azul-light);color:var(--azul);border-color:var(--line-strong)}
+.cat-outro{background:rgba(178,120,255,.12);color:#C79BFF;border-color:rgba(178,120,255,.35)}
+.pill-count{background:var(--azul-light);color:var(--azul);border:1px solid var(--line-strong);font-family:var(--font-mono);font-size:11px;font-weight:600;padding:4px 12px;border-radius:100px}
+
+.wordcount{font-family:var(--font-mono);font-size:11px;color:var(--muted);text-align:right;margin-top:4px}
+.wordcount.over{color:var(--vermelho);font-weight:700}
+
+.radar-wrap{display:flex;flex-direction:column;align-items:center;padding:60px 0;gap:22px}
+.radar{width:120px;height:120px;border-radius:50%;border:1.5px solid rgba(46,168,255,.4);position:relative;
+  background:radial-gradient(circle,rgba(46,168,255,.09) 30%,transparent 70%);box-shadow:0 0 40px rgba(46,168,255,.2),inset 0 0 30px rgba(46,168,255,.08)}
+.radar::before{content:"";position:absolute;inset:24px;border-radius:50%;border:1px solid rgba(46,168,255,.3)}
+.radar::after{content:"";position:absolute;inset:46px;border-radius:50%;border:1px solid rgba(46,168,255,.2)}
+.sweep{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,rgba(52,229,138,.6),transparent 70deg);animation:spin 1.6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.radar-msg{font-family:var(--font-mono);font-size:13px;color:var(--azul);font-weight:500;letter-spacing:.06em}
+
+/* ===== CARTÃO DE EMBARQUE ===== */
+.bpass{border-radius:20px;overflow:hidden;box-shadow:var(--shadow),0 0 50px rgba(46,168,255,.12);background:var(--card);
+  border:1px solid var(--line-strong);margin-top:26px;backdrop-filter:blur(14px)}
+.bpass-head{background:linear-gradient(92deg,rgba(10,27,74,.9),rgba(30,127,224,.55));border-bottom:1px solid var(--line-strong);
+  color:#fff;padding:20px 26px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.bpass-head .label{font-family:var(--font-mono);font-size:9px;letter-spacing:.24em;text-transform:uppercase;color:#9FC5EF}
+.bpass-head .value{font-family:var(--font-display);font-weight:700;font-size:16px}
+.bpass-body{padding:26px;border-bottom:2px dashed var(--line-strong);display:grid;grid-template-columns:auto 1fr;gap:30px;align-items:center}
+@media(max-width:640px){.bpass-body{grid-template-columns:1fr}}
+.scorebox{text-align:center}
+.score-num{font-family:var(--font-display);font-weight:800;font-size:64px;line-height:1;letter-spacing:-.03em;text-shadow:0 0 30px currentColor}
+.score-label{font-family:var(--font-mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-top:6px}
+.dim{margin-bottom:14px}
+.dim .dim-top{display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--ink)}
+.dim .dim-top span:last-child{font-family:var(--font-mono);color:var(--muted)}
+.dim .bar{height:8px;border-radius:100px;background:rgba(96,160,255,.12);overflow:hidden;border:1px solid var(--line)}
+.dim .fill{height:100%;border-radius:100px;transition:width .9s cubic-bezier(.2,.8,.2,1);box-shadow:0 0 14px currentColor}
+.bpass-foot{padding:20px 26px;display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between;align-items:center}
+.status-chip{font-weight:800;font-family:var(--font-display);font-size:14px;padding:8px 18px;border-radius:100px}
+.bpass-foot p{color:var(--muted)!important}
+
+.vio{border-left:3px solid;border-radius:12px;background:var(--card);border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line);
+  box-shadow:var(--shadow);padding:18px 20px;margin-bottom:12px;backdrop-filter:blur(10px)}
+.vio .vio-head{display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap}
+.vio .sev{font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:3px 10px;border-radius:100px;border:1px solid}
+.vio h4{font-size:15px;color:#fff}
+.vio p{font-size:13.5px;color:var(--ink);line-height:1.6}
+.vio .fix{margin-top:10px;padding:10px 14px;background:rgba(52,229,138,.09);border:1px solid rgba(52,229,138,.25);border-radius:10px;font-size:13px;color:#8FF2BE;display:flex;gap:8px}
+.sev-alta{background:rgba(255,92,102,.12);color:var(--vermelho);border-color:rgba(255,92,102,.4)}
+.sev-media{background:rgba(255,211,77,.12);color:var(--amarelo);border-color:rgba(255,211,77,.4)}
+.sev-baixa{background:var(--azul-light);color:var(--azul);border-color:var(--line-strong)}
+
+/* ===== CHAT ===== */
+.chat-card{display:flex;flex-direction:column;height:min(640px,72vh);background:var(--card);border:1px solid var(--line-strong);
+  border-radius:var(--radius);box-shadow:var(--shadow),0 0 40px rgba(46,168,255,.1);overflow:hidden;margin-top:24px;backdrop-filter:blur(14px)}
+.chat-head{padding:16px 22px;background:rgba(10,27,74,.8);border-bottom:1px solid var(--line-strong);color:#fff;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.chat-head .dot{width:9px;height:9px;border-radius:50%;background:var(--verde);box-shadow:0 0 12px var(--verde)}
+.chat-log{flex:1;overflow-y:auto;padding:22px;display:flex;flex-direction:column;gap:14px;background:rgba(4,9,24,.5)}
+.msg{max-width:78%;padding:12px 16px;border-radius:16px;font-size:14px;line-height:1.6;white-space:pre-wrap}
+.msg.user{align-self:flex-end;background:linear-gradient(92deg,#1E7FE0,var(--azul));color:#fff;border-bottom-right-radius:4px;box-shadow:0 4px 18px rgba(46,168,255,.25)}
+.msg.ai{align-self:flex-start;background:rgba(13,24,54,.85);border:1px solid var(--line);border-bottom-left-radius:4px;color:var(--ink)}
+.msg.ai .who{font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--azul);letter-spacing:.14em;text-transform:uppercase;margin-bottom:4px}
+.chat-input{display:flex;gap:10px;padding:14px;border-top:1px solid var(--line);background:rgba(10,20,46,.7)}
+.chat-input textarea{flex:1;resize:none;height:48px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;outline:none;background:rgba(5,12,32,.7)}
+.chat-input textarea:focus{border-color:var(--azul);box-shadow:0 0 0 3px rgba(46,168,255,.15)}
+.btn-send{background:linear-gradient(92deg,#1FA764,var(--verde));color:#04160C;font-weight:800;padding:0 22px;border-radius:12px;font-size:14px;box-shadow:0 0 20px rgba(52,229,138,.3)}
+.btn-send:hover{box-shadow:0 0 30px rgba(52,229,138,.5)}
+.typing{display:inline-flex;gap:4px;align-items:center}
+.typing span{width:6px;height:6px;border-radius:50%;background:var(--azul);opacity:.4;animation:blink 1.2s infinite;box-shadow:0 0 8px var(--azul)}
+.typing span:nth-child(2){animation-delay:.2s}.typing span:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.25}40%{opacity:1}}
+
+.back{background:transparent;color:var(--muted);font-size:13px;font-weight:600;margin-bottom:14px;display:inline-flex;gap:6px;align-items:center;padding:6px 10px;border-radius:8px;border:1px solid transparent}
+.back:hover{background:var(--azul-light);color:var(--azul);border-color:var(--line)}
+.err-banner{background:rgba(255,92,102,.1);border:1px solid rgba(255,92,102,.35);color:#FFB3B9;border-radius:12px;padding:14px 18px;font-size:13.5px;margin-top:16px;line-height:1.6}
+
+.hist-item{display:flex;align-items:center;gap:14px;padding:16px 18px;background:var(--card);border-radius:12px;border:1px solid var(--line);
+  box-shadow:var(--shadow);margin-bottom:10px;cursor:pointer;transition:border .15s,box-shadow .15s;flex-wrap:wrap;backdrop-filter:blur(10px)}
+.hist-item:hover{border-color:var(--azul);box-shadow:var(--shadow),0 0 24px rgba(46,168,255,.15)}
+.hist-score{font-family:var(--font-display);font-weight:800;font-size:22px;min-width:52px;text-align:center;text-shadow:0 0 16px currentColor}
+.hist-info{flex:1;min-width:180px}
+.hist-info h4{font-size:15px;color:#fff}
+.hist-info p{font-size:12.5px;color:var(--muted);margin-top:2px}
+.hist-status{font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:4px 12px;border-radius:100px;border:1px solid}
+.empty-state{text-align:center;padding:50px 20px;color:var(--muted);font-size:14.5px;line-height:1.7}
+
+.modal-bg{position:fixed;inset:0;background:rgba(2,6,18,.75);backdrop-filter:blur(6px);z-index:100;
+  display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{width:min(520px,94vw);background:var(--card-solid);border:1px solid var(--line-strong);border-radius:20px;
+  box-shadow:0 20px 80px rgba(0,0,0,.6),0 0 60px rgba(46,168,255,.12);overflow:hidden;max-height:88vh;overflow-y:auto}
+.modal-head{padding:18px 24px;background:rgba(10,27,74,.85);border-bottom:1px solid var(--line-strong);color:#fff;display:flex;justify-content:space-between;align-items:center}
+.modal-head h3{font-size:16px}
+.modal-head .x{background:transparent;color:#fff;font-size:20px;opacity:.7;padding:2px 8px;border-radius:8px}
+.modal-head .x:hover{opacity:1;background:rgba(255,255,255,.1)}
+.modal-body{padding:24px}
+.modal-body p{color:var(--muted)}
+.modal-body p b{color:var(--ink)}
+
+.email-frame{border:1px solid var(--line-strong);border-radius:14px;overflow:hidden;margin-top:6px;background:rgba(5,12,32,.6)}
+.email-toolbar{background:rgba(10,20,46,.9);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;gap:6px;align-items:center;font-family:var(--font-mono);font-size:11px;color:var(--muted)}
+.email-toolbar .dot-r{width:10px;height:10px;border-radius:50%;background:#FF5F57}
+.email-toolbar .dot-y{width:10px;height:10px;border-radius:50%;background:#FEBC2E}
+.email-toolbar .dot-g{width:10px;height:10px;border-radius:50%;background:#28C840}
+.email-meta{padding:14px 18px;border-bottom:1px solid var(--line);font-size:13px;line-height:1.7;color:var(--muted)}
+.email-meta b{color:var(--azul)}
+.email-body{padding:20px 18px;font-size:14px;line-height:1.75;color:var(--ink)}
+.email-body .cta{display:inline-block;background:linear-gradient(92deg,#1E7FE0,var(--azul));color:#fff;font-weight:700;font-size:13px;padding:10px 20px;border-radius:10px;margin-top:12px;box-shadow:0 0 18px rgba(46,168,255,.3)}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(10,27,74,.95);border:1px solid var(--line-strong);color:#fff;
+  padding:13px 24px;border-radius:100px;font-size:14px;font-weight:600;box-shadow:0 0 30px rgba(46,168,255,.25);z-index:200;animation:pop .25s;backdrop-filter:blur(10px)}
+@keyframes pop{from{opacity:0;transform:translateX(-50%) translateY(12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+/* ===== PLANO DE VOO ===== */
+.fp{margin-top:26px}
+.fp-step{display:flex;gap:16px;position:relative;padding-bottom:22px}
+.fp-step::before{content:"";position:absolute;left:17px;top:38px;bottom:0;width:2px;background:linear-gradient(var(--azul),rgba(46,168,255,.08))}
+.fp-step:last-child::before{display:none}
+.fp-num{flex-shrink:0;width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#1E7FE0,var(--azul));
+  color:#fff;font-family:var(--font-display);font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 18px rgba(46,168,255,.5)}
+.fp-body{background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:14px 18px;flex:1;backdrop-filter:blur(10px)}
+.fp-body h4{font-size:14.5px;color:#fff;margin-bottom:4px}
+.fp-body p{font-size:13px;color:var(--ink);line-height:1.6}
+.fp-body .fp-meta{margin-top:6px;font-family:var(--font-mono);font-size:10.5px;color:var(--muted);font-weight:600}
+.chips{display:flex;gap:8px;flex-wrap:wrap;padding:10px 14px 0}
+.chip{background:var(--azul-light);color:var(--azul);font-size:12.5px;font-weight:600;padding:7px 14px;border-radius:100px;border:1px solid var(--line)}
+.chip:hover{border-color:var(--azul);box-shadow:0 0 14px rgba(46,168,255,.2)}
+</style>
+</head>
+<body>
+
+<div class="strip"></div>
+<div class="topbar">
+  <div class="brand">
+    <svg width="34" height="34" viewBox="0 0 48 48" aria-label="Logo Azuli">
+      <circle cx="24" cy="24" r="23" fill="#071B4E"/>
+      <path d="M9 30 L36 15 L31 24 L39 26 L34 30 L22 29 L13 33 Z" fill="#fff"/>
+      <path d="M31 24 L36 15 L38 18 Z" fill="#FFC72C"/>
+      <path d="M39 26 L34 30 L37 30.5 Z" fill="#2FBF71"/>
+    </svg>
+    <div>
+      <div class="name">Azuli</div>
+      <div class="tag">Torre de Controle da Marca</div>
+    </div>
+  </div>
+  <div class="userchip" id="userchip"></div>
+</div>
+
+<!-- COVER -->
+<div id="screen-cover" class="cover">
+  <div class="stars"></div>
+  <div class="aurora" style="width:520px;height:520px;background:#0B7BD6;top:-160px;left:-120px"></div>
+  <div class="aurora" style="width:420px;height:420px;background:#2FBF71;bottom:-140px;right:-80px;animation-delay:-3s"></div>
+  <div class="aurora" style="width:300px;height:300px;background:#FFC72C;top:30%;right:12%;opacity:.28;animation-delay:-6s"></div>
+  <div class="fly">✈️</div>
+  <div class="cover-inner">
+    <span class="cover-eyebrow">⬢ Inteligência artificial de marca · Exclusivo Tripulantes</span>
+    <div class="cover-title">Azuli</div>
+    <p class="cover-sub">A <b>torre de controle da marca Azul</b>. Audite ideias em cinco dimensões, receba um score de 0 a 100, trace o plano de voo do seu projeto e desenvolva com um copiloto que conhece a companhia de ponta a ponta.</p>
+    <button class="cover-cta" onclick="show('screen-login')">Embarcar agora <span>→</span></button>
+    <div class="cover-stats">
+      <div class="cstat"><b>5</b>dimensões auditadas</div>
+      <div class="cstat"><b>0–100</b>score de alinhamento</div>
+      <div class="cstat"><b>&lt; 40 s</b>por auditoria</div>
+      <div class="cstat"><b>6</b>valores protegidos</div>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div id="screen-login" class="sky hidden">
+  <div class="cloud" style="width:220px;height:60px;top:16%;animation-duration:75s"></div>
+  <div class="cloud" style="width:150px;height:44px;top:64%;animation-duration:55s;animation-delay:-20s"></div>
+  <div class="cloud" style="width:300px;height:70px;top:38%;animation-duration:95s;animation-delay:-50s"></div>
+  <div class="login-card">
+    <span class="badge-internal">✈ Acesso exclusivo · Tripulantes Azul</span>
+    <h1 id="login-title">Bem-vindo a bordo</h1>
+    <p class="sub" id="login-sub">Crie sua conta corporativa para embarcar.</p>
+    <div class="field" id="f-name"><label>Nome completo</label><input id="in-name" placeholder="Ex.: Ana Ribeiro"></div>
+    <div class="field"><label>E-mail corporativo</label><input id="in-email" placeholder="ana.ribeiro@voeazul.com.br"></div>
+    <div class="field"><label>Senha</label><input id="in-pass" type="password" placeholder="••••••••"></div>
+    <button class="btn-primary" id="btn-login" onclick="doAuth()">Criar conta e embarcar</button>
+    <div class="login-err" id="login-err"></div>
+    <div class="switch-mode" id="switch-mode">Já tem conta? <a onclick="toggleMode()">Fazer login</a></div>
+  </div>
+</div>
+
+<!-- ROLE -->
+<div id="screen-role" class="shell hidden">
+  <div class="section-eyebrow">Portão de embarque</div>
+  <h2 class="section-title">Como você vai voar hoje, <span id="role-name"></span>?</h2>
+  <p class="section-sub">Sua área define o que você vê. O time de marketing pilota a base de conhecimento; as demais verticais usam o Azuli para alinhar e desenvolver projetos.</p>
+  <div class="role-grid">
+    <button class="role-card" onclick="chooseRole('marketing')">
+      <div class="icon" style="background:var(--azul-light)">🗼</div>
+      <h3>Time de Marketing</h3>
+      <p>Gerencie o cérebro do Azuli: visualize e atualize os valores, o tom de voz e as diretrizes de identidade que alimentam cada auditoria.</p>
+    </button>
+    <button class="role-card" onclick="chooseRole('vertical')">
+      <div class="icon" style="background:rgba(255,211,77,.12)">🛫</div>
+      <h3>Outras Verticais</h3>
+      <p>Financeiro, Tech, Operações, RH… Envie sua ideia de projeto, receba a auditoria de marca com nota /100 e desenvolva com o copiloto Azuli.</p>
+    </button>
+  </div>
+  <div class="mini-links">
+    <button class="mini-link" onclick="openHistory()">📜 Meu histórico com o Azuli</button>
+    <button class="mini-link" onclick="openShared()">📬 Hangar compartilhado</button>
+  </div>
+</div>
+
+<!-- MARKETING -->
+<div id="screen-mkt" class="shell hidden">
+  <button class="back" onclick="show('screen-role')">← Trocar de perfil</button>
+  <div class="section-eyebrow">Painel do Marketing</div>
+  <h2 class="section-title">Base de conhecimento da marca</h2>
+  <p class="section-sub">Tudo o que está aqui alimenta o Azuli em tempo real. Cada auditoria usa exatamente estas diretrizes — atualize e o Azuli evolui no mesmo instante.</p>
+  <div class="kb-layout">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <h3 style="font-size:17px;color:#fff">Diretrizes ativas</h3>
+        <span class="pill-count" id="kb-count"></span>
+      </div>
+      <div id="kb-list"></div>
+    </div>
+    <div class="card" style="align-self:start">
+      <h3 style="font-size:17px;color:#fff;margin-bottom:14px">＋ Adicionar diretriz</h3>
+      <div class="field">
+        <label>Categoria</label>
+        <select id="kb-cat">
+          <option value="valores">Valores</option>
+          <option value="visual">Identidade visual</option>
+          <option value="tom">Tom de voz</option>
+          <option value="outro">Terminologia / Outro</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Diretriz</label>
+        <textarea id="kb-text" rows="4" placeholder="Ex.: Toda campanha de 2026 deve usar o mote 'O Céu do Brasil é Azul'."></textarea>
+      </div>
+      <button class="btn-primary" onclick="addKB()">Publicar no Azuli</button>
+      <p style="font-size:12px;color:var(--muted);margin-top:10px;line-height:1.5">Ao publicar, a diretriz vale imediatamente para todas as auditorias de todos os setores.</p>
+    </div>
+  </div>
+</div>
+
+<!-- FORM -->
+<div id="screen-form" class="shell hidden">
+  <button class="back" onclick="show('screen-role')">← Trocar de perfil</button>
+  <div class="section-eyebrow">Check-in de projeto</div>
+  <h2 class="section-title">Apresente sua ideia ao Azuli</h2>
+  <p class="section-sub">Preencha o check-in. O Azuli audita sua ideia contra as diretrizes oficiais da marca Azul e devolve uma nota /100 com cada desvio apontado — antes de qualquer reunião.</p>
+  <div class="card" style="margin-top:24px;max-width:720px">
+    <div class="field">
+      <label>Setor do projeto</label>
+      <select id="p-setor">
+        <option>Tecnologia</option><option>Financeiro</option><option>Operações</option>
+        <option>RH / Gente & Cultura</option><option>Cargas (Azul Cargo)</option><option>Comercial</option><option>Experiência do Cliente</option>
+      </select>
+    </div>
+    <div class="field"><label>Nome da ideia</label><input id="p-titulo" placeholder="Ex.: App interno de carona entre bases"></div>
+    <div class="field">
+      <label>Descrição da ideia (sem limite — quanto mais clara, melhor a nota de Clareza)</label>
+      <textarea id="p-desc" rows="6" placeholder="Descreva o que é, para que serve e como funcionaria..." oninput="countWords()"></textarea>
+      <div class="wordcount" id="wc">0 palavras</div>
+    </div>
+    <div class="field"><label>Público-alvo</label><input id="p-publico" placeholder="Ex.: Tripulantes de bases regionais; clientes corporativos..."></div>
+    <div class="field"><label>Perguntas para o Azuli (opcional)</label><textarea id="p-perguntas" rows="3" placeholder="Ex.: Esse nome combina com a marca? Que cores devo usar?"></textarea></div>
+    <button class="btn-primary" onclick="runAudit()">🛫 Solicitar autorização de decolagem</button>
+    <div id="form-err"></div>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div id="screen-loading" class="shell hidden">
+  <div class="radar-wrap">
+    <div class="radar"><div class="sweep"></div></div>
+    <div class="radar-msg" id="radar-msg">Contactando a torre…</div>
+  </div>
+</div>
+
+<!-- REPORT -->
+<div id="screen-report" class="shell hidden">
+  <button class="back" onclick="show('screen-form')">← Nova auditoria</button>
+  <div class="section-eyebrow">Relatório de conformidade</div>
+  <h2 class="section-title">Cartão de embarque da sua ideia</h2>
+  <div id="report-zone"></div>
+  <div id="vio-zone" style="margin-top:26px"></div>
+  <div id="answers-zone" style="margin-top:8px"></div>
+  <div style="margin-top:26px;display:flex;gap:12px;flex-wrap:wrap">
+    <button class="btn-primary" style="width:auto;padding:14px 26px" onclick="startChat()">🧭 Desenvolver com o copiloto Azuli</button>
+    <button class="btn-primary" style="width:auto;padding:14px 26px;background:var(--azul-deep)" onclick="genFlightPlan()">🗺 Gerar Plano de Voo</button>
+    <button class="btn-primary" style="width:auto;padding:14px 26px;background:var(--verde)" onclick="openShare()">📤 Compartilhar projeto</button>
+    <button class="btn-ghost" onclick="show('screen-form')">Reenviar ideia corrigida</button>
+  </div>
+  <div id="fp-zone" class="fp"></div>
+</div>
+
+<!-- CHAT -->
+<div id="screen-chat" class="shell hidden">
+  <button class="back" onclick="show('screen-report')">← Voltar ao relatório</button>
+  <div class="section-eyebrow">Copiloto de desenvolvimento</div>
+  <h2 class="section-title">Azuli acompanha seu projeto até o pouso</h2>
+  <div class="chat-card">
+    <div class="chat-head">
+      <span class="dot"></span>
+      <div style="flex:1;min-width:200px">
+        <div style="font-family:var(--font-display);font-weight:700;font-size:15px">Azuli — copiloto do projeto <span id="chat-proj"></span></div>
+        <div style="font-size:11.5px;opacity:.75">Contexto ativo: sua ideia + relatório + diretrizes da marca</div>
+      </div>
+      <button class="btn-ghost" style="color:#fff;background:rgba(255,255,255,.12)" onclick="openShare()">📤 Compartilhar</button>
+    </div>
+    <div class="chat-log" id="chat-log"></div>
+    <div class="chat-input">
+      <textarea id="chat-in" placeholder="Pergunte, peça melhorias, valide decisões…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg()}"></textarea>
+      <button class="btn-send" onclick="sendMsg()">Enviar ✈</button>
+    </div>
+  </div>
+</div>
+
+<!-- HISTORY -->
+<div id="screen-history" class="shell hidden">
+  <button class="back" onclick="show('screen-role')">← Voltar</button>
+  <div class="section-eyebrow">Diário de bordo</div>
+  <h2 class="section-title">Meu histórico com o Azuli</h2>
+  <p class="section-sub">Todas as auditorias que você já fez, salvas na sua conta. Toque em qualquer voo para reabrir o relatório completo.</p>
+  <div id="hist-list" style="margin-top:24px"></div>
+</div>
+
+<!-- SHARED -->
+<div id="screen-shared" class="shell hidden">
+  <button class="back" onclick="show('screen-role')">← Voltar</button>
+  <div class="section-eyebrow">Colaboração entre verticais</div>
+  <h2 class="section-title">Hangar compartilhado</h2>
+  <p class="section-sub">Projetos que Tripulantes compartilharam com setores ou pessoas. Abra qualquer um para ver o relatório de conformidade — a comunicação entre áreas com um novo significado.</p>
+  <div id="shared-list" style="margin-top:24px"></div>
+</div>
+
+<!-- MODAL: welcome email -->
+<div id="modal-email" class="modal-bg hidden">
+  <div class="modal">
+    <div class="modal-head"><h3>📧 E-mail de boas-vindas enviado</h3><button class="x" onclick="closeModal('modal-email')">✕</button></div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Sua conta foi registrada. Este é o e-mail que chegou na sua caixa de entrada:</p>
+      <div class="email-frame">
+        <div class="email-toolbar"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span><span style="margin-left:8px">Caixa de entrada — Azul Mail</span></div>
+        <div class="email-meta">
+          <div><b>De:</b> Azuli — Torre de Controle da Marca &lt;azuli@voeazul.com.br&gt;</div>
+          <div><b>Para:</b> <span id="email-to"></span></div>
+          <div><b>Assunto:</b> ✈ Bem-vindo a bordo do Azuli, <span id="email-firstname"></span>!</div>
+        </div>
+        <div class="email-body">
+          Olá, <b id="email-name2"></b>!<br><br>
+          Sua conta no <b>Azuli</b> foi criada com sucesso. A partir de agora, toda ideia sua pode decolar já alinhada aos seis valores da Azul — Segurança, Consideração, Integridade, Paixão, Inovação e Excelência.<br><br>
+          Faça seu primeiro check-in de projeto e receba a autorização de decolagem da marca. 🛫<br>
+          <span class="cta">Acessar o Azuli</span><br><br>
+          <span style="font-size:12px;color:var(--muted)">O Céu do Brasil é Azul — e a marca também.</span>
+        </div>
+      </div>
+      <button class="btn-primary" style="margin-top:18px" onclick="closeModal('modal-email');show('screen-role')">Continuar para o embarque →</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: share -->
+<div id="modal-share" class="modal-bg hidden">
+  <div class="modal">
+    <div class="modal-head"><h3>📤 Compartilhar projeto</h3><button class="x" onclick="closeModal('modal-share')">✕</button></div>
+    <div class="modal-body">
+      <p style="font-size:13.5px;color:var(--muted);margin-bottom:16px;line-height:1.6">Envie <b id="share-proj-name" style="color:#fff"></b> — com o relatório de conformidade completo — para outro setor ou Tripulante. O projeto ficará visível no <b>Hangar compartilhado</b> para todos os usuários.</p>
+      <div class="field">
+        <label>Compartilhar com o setor</label>
+        <select id="share-setor">
+          <option>Todos os setores</option><option>Marketing</option><option>Tecnologia</option><option>Financeiro</option>
+          <option>Operações</option><option>RH / Gente & Cultura</option><option>Cargas (Azul Cargo)</option><option>Comercial</option><option>Experiência do Cliente</option>
+        </select>
+      </div>
+      <div class="field"><label>E-mail de um Tripulante (opcional)</label><input id="share-email" placeholder="nome.sobrenome@voeazul.com.br"></div>
+      <div class="field"><label>Mensagem (opcional)</label><textarea id="share-msg" rows="3" placeholder="Ex.: Pessoal, ideia aprovada pelo Azuli com nota 92 — topam construir juntos?"></textarea></div>
+      <button class="btn-primary" onclick="doShare()">Compartilhar no hangar ✈</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   AZULI v2 — contas persistentes, e-mail de boas-vindas,
+   histórico por usuário e compartilhamento entre setores.
+   Persistência: window.storage (artefatos Claude), com
+   fallback em memória se indisponível (ex.: fora do Claude).
+========================================================= */
+const $ = id => document.getElementById(id);
+function esc(s){return (s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+/* ---------- camada de armazenamento ---------- */
+const mem = {}; // fallback em memória
+const hasStorage = typeof window.storage !== 'undefined';
+async function stGet(key, shared=false){
+  if(!hasStorage){ return mem[(shared?'S:':'P:')+key] ?? null; }
+  try{ const r = await window.storage.get(key, shared); return r ? r.value : null; }catch(e){ return null; }
+}
+async function stSet(key, value, shared=false){
+  if(!hasStorage){ mem[(shared?'S:':'P:')+key]=value; return true; }
+  try{ await window.storage.set(key, value, shared); return true; }catch(e){ console.error('storage.set',e); return false; }
+}
+
+/* chave segura a partir do e-mail (sem espaços/aspas/barras) */
+function keyFromEmail(em){ return em.toLowerCase().replace(/[\s/\\'"]/g,''); }
+
+/* ---------- estado ---------- */
+let user = null;
+let signupMode = true;
+let currentProject = null;
+let currentReport = null;
+let chatHistory = [];
+let viewingShared = false;
+
+/* base de conhecimento — semeada com a marca real da Azul */
+let kb = [
+  {cat:'valores', text:'Visão da Azul: construir juntos a melhor companhia aérea do mundo.'},
+  {cat:'valores', text:'Missão: fazer com que esse seja o melhor emprego da minha vida e que nosso Cliente tenha o melhor voo da sua.'},
+  {cat:'valores', text:'Seis valores oficiais: Segurança (nada é mais importante), Consideração (OPA — Observe, Perceba e Atenda), Integridade, Paixão, Inovação e Excelência.'},
+  {cat:'tom', text:'Tom de voz: caloroso, humano, próximo e otimista. Funcionários são sempre chamados de "Tripulantes" e clientes de "Clientes" (com C maiúsculo).'},
+  {cat:'tom', text:'Mote institucional vigente: "O Céu do Brasil é Azul". Campanhas devem reforçar conexão entre pessoas, histórias e destinos do Brasil.'},
+  {cat:'visual', text:'Identidade visual: azul profundo como cor primária, com apoio de amarelo e verde (referência às cores do Brasil). Evitar vermelho como cor dominante (associada a concorrentes).'},
+  {cat:'visual', text:'Materiais devem ser limpos, modernos e acessíveis, com fotografia real de pessoas e destinos brasileiros em vez de banco de imagens genérico.'},
+  {cat:'outro', text:'Contexto 2026: a Azul concluiu sua reestruturação (Chapter 11) em fevereiro de 2026. Comunicações devem transmitir solidez, eficiência e recomeço — nunca mencionar a reestruturação em tom negativo.'}
+];
+(async()=>{ // carrega KB persistida, se existir
+  const saved = await stGet('azuli:kb');
+  if(saved){ try{ kb = JSON.parse(saved); }catch(e){} }
+})();
+async function persistKB(){ await stSet('azuli:kb', JSON.stringify(kb)); }
+
+/* conhecimento institucional — permite responder perguntas complexas sobre a companhia */
+const COMPANY_FACTS = `FATOS INSTITUCIONAIS DA AZUL (para responder perguntas complexas sobre a companhia):
+- Fundada em 2008 por David Neeleman; maior malha doméstica do Brasil em cidades atendidas e rotas diretas (~250 rotas, 130+ bases); única companhia presente em cerca de 80% das suas rotas.
+- ~15.000 Tripulantes; ~170 aeronaves; recorde de 32 milhões de passageiros transportados em 2025.
+- Reestruturação financeira: entrou em Chapter 11 nos EUA em maio de 2025 (dívida ~US$ 2 bi) e SAIU em fevereiro de 2026, eliminando mais de US$ 2 bi em dívidas, com investimentos de US$ 100 mi cada de United Airlines e American Airlines; retorno à Bolsa de Nova York em meados de 2026; meta de ~R$ 2 bilhões/ano em eficiência.
+- Marca: campanha institucional "O Céu do Brasil é Azul"; visão "construir juntos a melhor companhia aérea do mundo"; programa de fidelidade TudoAzul; unidades: Azul Cargo (cargas), Azul Viagens (turismo), Azul Conecta (regional).
+- Cultura: valores Segurança, Consideração (OPA — Observe, Perceba e Atenda), Integridade, Paixão, Inovação, Excelência.
+BOAS PRÁTICAS DE PROJETOS INTERNOS (para orientar qualquer Tripulante): 1) brief claro (o quê, por quê, para quem, como medir sucesso); 2) mapear stakeholders e aprovadores cedo — incluindo marketing desde o início; 3) validar a ideia com o Azuli antes de investir; 4) piloto pequeno antes de escalar; 5) definir KPIs e prazo; 6) comunicação de lançamento alinhada à marca; 7) medir, aprender e iterar.`;
+
+/* ---------- navegação ---------- */
+const SCREENS=['screen-cover','screen-login','screen-role','screen-mkt','screen-form','screen-loading','screen-report','screen-chat','screen-history','screen-shared'];
+function show(id){ SCREENS.forEach(s=>$(s).classList.add('hidden')); $(id).classList.remove('hidden'); window.scrollTo({top:0}); }
+function closeModal(id){ $(id).classList.add('hidden'); }
+function toast(t){ const el=document.createElement('div'); el.className='toast'; el.textContent=t; document.body.appendChild(el); setTimeout(()=>el.remove(),2600); }
+
+/* ---------- autenticação com contas registradas ---------- */
+function toggleMode(){
+  signupMode = !signupMode;
+  $('login-title').textContent = signupMode ? 'Bem-vindo a bordo' : 'Bom te ver de novo';
+  $('login-sub').textContent = signupMode ? 'Crie sua conta corporativa para embarcar.' : 'Entre com a conta que você registrou.';
+  $('btn-login').textContent = signupMode ? 'Criar conta e embarcar' : 'Entrar';
+  $('f-name').style.display = signupMode ? 'block':'none';
+  $('login-err').textContent='';
+  $('switch-mode').innerHTML = signupMode
+    ? 'Já tem conta? <a onclick="toggleMode()">Fazer login</a>'
+    : 'Novo por aqui? <a onclick="toggleMode()">Criar conta</a>';
+}
+
+async function doAuth(){
+  const email = $('in-email').value.trim().toLowerCase();
+  const pass  = $('in-pass').value;
+  const errEl = $('login-err');
+  errEl.textContent='';
+  if(!email || !pass){ errEl.textContent='Preencha e-mail e senha.'; return; }
+  const acctKey = 'azuli:acct:'+keyFromEmail(email);
+
+  if(signupMode){
+    const name = $('in-name').value.trim();
+    if(!name){ errEl.textContent='Preencha seu nome completo.'; return; }
+    const existing = await stGet(acctKey);
+    if(existing){ errEl.textContent='Este e-mail já está registrado. Use "Fazer login".'; return; }
+    /* Demo: senha guardada como está. Em produção: hash + backend.
+       GANCHO PARA E-MAIL REAL: aqui o time de tech pode plugar o EmailJS
+       (emailjs.com — grátis) para disparar o e-mail de verdade:
+       emailjs.send('SERVICE_ID','TEMPLATE_ID',{to_email:email,to_name:name}); */
+    await stSet(acctKey, JSON.stringify({name, email, pass, created: Date.now()}));
+    loginSuccess({name, email});
+    $('email-to').textContent = email;
+    $('email-firstname').textContent = name.split(' ')[0];
+    $('email-name2').textContent = name.split(' ')[0];
+    $('modal-email').classList.remove('hidden');
+  } else {
+    const raw = await stGet(acctKey);
+    if(!raw){ errEl.textContent='Conta não encontrada. Crie sua conta primeiro.'; return; }
+    let acct; try{ acct=JSON.parse(raw); }catch(e){ errEl.textContent='Erro ao ler a conta.'; return; }
+    if(acct.pass !== pass){ errEl.textContent='Senha incorreta. Tente novamente.'; return; }
+    loginSuccess(acct);
+    show('screen-role');
+    toast('Bem-vindo de volta, '+acct.name.split(' ')[0]+'! ✈');
+  }
+}
+function loginSuccess(acct){
+  user = {name: acct.name, email: acct.email};
+  $('userchip').innerHTML = `<span>✈ <b>${esc(user.name.split(' ')[0])}</b></span>
+    <button class="btn-ghost" onclick="openHistory()">Histórico</button>
+    <button class="btn-ghost" onclick="logout()">Sair</button>`;
+  $('role-name').textContent = user.name.split(' ')[0];
+}
+function logout(){
+  user=null; currentProject=null; currentReport=null; chatHistory=[];
+  $('userchip').innerHTML=''; $('in-pass').value=''; show('screen-cover');
+}
+
+/* ---------- perfis ---------- */
+function chooseRole(r){
+  if(r==='marketing'){ renderKB(); show('screen-mkt'); }
+  else show('screen-form');
+}
+
+/* ---------- KB ---------- */
+const catLabel={valores:'Valores',visual:'Visual',tom:'Tom de voz',outro:'Outro'};
+function renderKB(){
+  $('kb-count').textContent = kb.length + ' diretrizes';
+  $('kb-list').innerHTML = kb.map((e,i)=>`
+    <div class="kb-entry">
+      <span class="cat cat-${e.cat}">${catLabel[e.cat]}</span>
+      <p>${esc(e.text)}</p>
+      <button class="del" title="Remover" onclick="delKB(${i})">✕</button>
+    </div>`).join('');
+}
+function addKB(){
+  const t=$('kb-text').value.trim();
+  if(!t){alert('Escreva a diretriz antes de publicar.');return;}
+  kb.push({cat:$('kb-cat').value,text:t});
+  $('kb-text').value=''; renderKB(); persistKB();
+  toast('Diretriz publicada — o Azuli já está usando. 🗼');
+}
+function delKB(i){ kb.splice(i,1); renderKB(); persistKB(); }
+
+/* ---------- formulário ---------- */
+function countWords(){
+  const n = $('p-desc').value.trim().split(/\s+/).filter(Boolean).length;
+  const el=$('wc'); el.textContent=`${n} palavra${n===1?'':'s'}`;
+  el.classList.remove('over');
+}
+
+/* ---------- auditoria (Claude API) ---------- */
+const radarMsgs=['Contactando a torre…','Lendo as diretrizes da marca…','Auditando identidade visual…','Verificando tom de voz…','Calculando score de alinhamento…'];
+let radarTimer=null;
+
+async function runAudit(){
+  const desc=$('p-desc').value.trim();
+  const words=desc.split(/\s+/).filter(Boolean).length;
+  $('form-err').innerHTML='';
+  if(!$('p-titulo').value.trim()||!desc||!$('p-publico').value.trim()){
+    $('form-err').innerHTML='<div class="err-banner">Preencha nome, descrição e público-alvo antes de decolar.</div>';return;
+  }
+
+  currentProject={
+    setor:$('p-setor').value, titulo:$('p-titulo').value.trim(),
+    desc, publico:$('p-publico').value.trim(), perguntas:$('p-perguntas').value.trim()
+  };
+  viewingShared=false;
+
+  show('screen-loading');
+  let mi=0; $('radar-msg').textContent=radarMsgs[0];
+  radarTimer=setInterval(()=>{mi=(mi+1)%radarMsgs.length;$('radar-msg').textContent=radarMsgs[mi];},1800);
+
+  const kbText = kb.map(e=>`[${catLabel[e.cat]}] ${e.text}`).join('\n');
+  const prompt = `Você é o Azuli, IA de governança de marca da companhia aérea Azul. Audite a ideia de projeto abaixo contra as diretrizes oficiais da marca.
+
+DIRETRIZES DA MARCA (base de conhecimento atual):
+${kbText}
+
+IDEIA SUBMETIDA:
+- Setor: ${currentProject.setor}
+- Nome: ${currentProject.titulo}
+- Descrição: ${currentProject.desc}
+- Público-alvo: ${currentProject.publico}
+${currentProject.perguntas?`- Perguntas do usuário: ${currentProject.perguntas}`:''}
+
+Responda APENAS com JSON válido, sem markdown, sem crases, neste formato exato:
+{
+ "score": <0-100>,
+ "dimensoes": {"identidade_visual": <0-100>, "tom_de_voz": <0-100>, "valores": <0-100>, "terminologia": <0-100>, "clareza": <0-100>},
+ "status": "<APROVADO|AJUSTES NECESSÁRIOS|REPROVADO>",
+ "resumo": "<1-2 frases avaliando o alinhamento geral>",
+ "violacoes": [{"titulo":"<curto>","severidade":"<alta|media|baixa>","detalhe":"<qual diretriz foi ferida e como>","correcao":"<sugestão concreta>"}],
+ "respostas": "<respostas às perguntas do usuário, ou string vazia se não houver>"
+}
+Seja rigoroso mas justo: aponte no MÁXIMO 4 violações (as mais importantes). SEJA MUITO CONCISO: "detalhe" e "correcao" com no máximo 25 palavras cada; "respostas" com no máximo 60 palavras; "resumo" com no máximo 30 palavras. Score >=85 = APROVADO, 60-84 = AJUSTES NECESSÁRIOS, <60 = REPROVADO.
+CRITÉRIO DE CLAREZA: avalie se a descrição responde com clareza ao que o check-in cobra — o que é a ideia, para que serve, como funcionaria e se o público-alvo está bem definido. Descrições vagas, incompletas, confusas ou que não explicam o funcionamento recebem clareza baixa; se a clareza for < 60, inclua uma violação de severidade media com título "Falta de clareza na descrição" apontando exatamente o que ficou vago e o que detalhar. A nota de clareza também compõe o score geral.`;
+
+  try{
+    const resp = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content:prompt}]})
+    });
+    const data = await resp.json();
+    if(data.error){ throw new Error('API: '+(data.error.message||JSON.stringify(data.error))); }
+    if(!data.content){ throw new Error('Resposta da API sem conteúdo.'); }
+    let text = data.content.map(i=>i.text||'').join('').replace(/```json|```/g,'').trim();
+    const a=text.indexOf('{'), b=text.lastIndexOf('}');
+    if(a===-1||b===-1) throw new Error('A IA não retornou JSON. Início: '+text.slice(0,140));
+    currentReport = JSON.parse(text.slice(a,b+1));
+    currentReport.dimensoes = currentReport.dimensoes||{identidade_visual:0,tom_de_voz:0,valores:0,terminologia:0,clareza:0};
+    if(currentReport.dimensoes.clareza===undefined) currentReport.dimensoes.clareza=70;
+    currentReport.violacoes = currentReport.violacoes||[];
+    currentReport.respostas = currentReport.respostas||'';
+    clearInterval(radarTimer);
+    renderReport();
+    show('screen-report');
+    saveToHistory();           // <<< grava no diário de bordo do usuário
+  }catch(e){
+    clearInterval(radarTimer);
+    show('screen-form');
+    $('form-err').innerHTML='<div class="err-banner"><b>A torre não respondeu.</b><br>Detalhe técnico: '+esc(e.message||String(e))+'<br><br>Dicas: (1) a IA só funciona com o site aberto dentro do Claude; (2) se o JSON veio cortado, apenas tente de novo.</div>';
+    console.error(e);
+  }
+}
+
+/* ---------- histórico por usuário ---------- */
+async function saveToHistory(){
+  if(!user) return;
+  const hkey = 'azuli:hist:'+keyFromEmail(user.email);
+  let hist = [];
+  const raw = await stGet(hkey);
+  if(raw){ try{ hist = JSON.parse(raw); }catch(e){} }
+  hist.unshift({ ts: Date.now(), project: currentProject, report: currentReport });
+  if(hist.length>25) hist = hist.slice(0,25); // limite para não estourar armazenamento
+  await stSet(hkey, JSON.stringify(hist));
+}
+async function openHistory(){
+  show('screen-history');
+  $('hist-list').innerHTML='<div class="empty-state">Carregando diário de bordo…</div>';
+  const raw = await stGet('azuli:hist:'+keyFromEmail(user.email));
+  let hist=[]; if(raw){ try{ hist=JSON.parse(raw); }catch(e){} }
+  if(!hist.length){
+    $('hist-list').innerHTML='<div class="empty-state">✈ Nenhum voo registrado ainda.<br>Faça seu primeiro check-in de projeto e ele aparecerá aqui.</div>';
+    return;
+  }
+  window._hist = hist;
+  $('hist-list').innerHTML = hist.map((h,i)=>{
+    const s=h.report.score, col=scoreColor(s);
+    const stBg = h.report.status==='APROVADO'?'background:rgba(52,229,138,.12);color:#5CE39A;border:1px solid rgba(52,229,138,.4)':(h.report.status==='REPROVADO'?'background:rgba(255,92,102,.12);color:#FF8A93;border:1px solid rgba(255,92,102,.4)':'background:rgba(255,211,77,.12);color:#FFD34D;border:1px solid rgba(255,211,77,.4)');
+    const d=new Date(h.ts);
+    return `<div class="hist-item" onclick="openHistItem(${i})">
+      <div class="hist-score" style="color:${col}">${s}</div>
+      <div class="hist-info"><h4>${esc(h.project.titulo)}</h4><p>${esc(h.project.setor)} · ${d.toLocaleDateString('pt-BR')} ${d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</p></div>
+      <span class="hist-status" style="${stBg}">${esc(h.report.status)}</span>
+    </div>`;
+  }).join('');
+}
+function openHistItem(i){
+  const h=window._hist[i];
+  currentProject=h.project; currentReport=h.report; viewingShared=false;
+  renderReport(); show('screen-report');
+}
+
+/* ---------- compartilhamento ---------- */
+function openShare(){
+  if(!currentProject||!currentReport){ toast('Faça uma auditoria primeiro.'); return; }
+  $('share-proj-name').textContent='“'+currentProject.titulo+'”';
+  $('modal-share').classList.remove('hidden');
+}
+async function doShare(){
+  const share = {
+    id: Date.now()+'-'+Math.random().toString(36).slice(2,7),
+    ts: Date.now(),
+    from: {name:user.name, email:user.email},
+    toSetor: $('share-setor').value,
+    toEmail: $('share-email').value.trim(),
+    msg: $('share-msg').value.trim(),
+    project: currentProject,
+    report: currentReport
+  };
+  let list=[]; const raw = await stGet('azuli:shared', true);   // shared=true: visível a todos
+  if(raw){ try{ list=JSON.parse(raw); }catch(e){} }
+  list.unshift(share);
+  if(list.length>40) list=list.slice(0,40);
+  const ok = await stSet('azuli:shared', JSON.stringify(list), true);
+  closeModal('modal-share');
+  $('share-email').value=''; $('share-msg').value='';
+  toast(ok ? '📤 Projeto compartilhado no hangar!' : 'Falha ao compartilhar — tente de novo.');
+}
+async function openShared(){
+  show('screen-shared');
+  $('shared-list').innerHTML='<div class="empty-state">Abrindo o hangar…</div>';
+  const raw = await stGet('azuli:shared', true);
+  let list=[]; if(raw){ try{ list=JSON.parse(raw); }catch(e){} }
+  if(!list.length){
+    $('shared-list').innerHTML='<div class="empty-state">📭 O hangar está vazio.<br>Quando alguém compartilhar um projeto, ele aparece aqui para todos os setores.</div>';
+    return;
+  }
+  window._shared = list;
+  $('shared-list').innerHTML = list.map((sh,i)=>{
+    const s=sh.report.score, col=scoreColor(s);
+    const d=new Date(sh.ts);
+    return `<div class="hist-item" onclick="openSharedItem(${i})">
+      <div class="hist-score" style="color:${col}">${s}</div>
+      <div class="hist-info">
+        <h4>${esc(sh.project.titulo)}</h4>
+        <p>de <b>${esc(sh.from.name)}</b> → <b>${esc(sh.toSetor)}</b>${sh.toEmail?' · a/c '+esc(sh.toEmail):''} · ${d.toLocaleDateString('pt-BR')}</p>
+        ${sh.msg?`<p style="margin-top:4px;font-style:italic;color:var(--ink)">“${esc(sh.msg)}”</p>`:''}
+      </div>
+      <span class="hist-status" style="background:var(--azul-light);color:var(--azul)">Abrir</span>
+    </div>`;
+  }).join('');
+}
+function openSharedItem(i){
+  const sh=window._shared[i];
+  currentProject=sh.project; currentReport=sh.report; viewingShared=true;
+  renderReport(); show('screen-report');
+  toast('Projeto de '+sh.from.name.split(' ')[0]+' — modo leitura colaborativa');
+}
+
+/* ---------- plano de voo (caminho do projeto) ---------- */
+async function genFlightPlan(){
+  const z=$('fp-zone');
+  z.innerHTML='<div class="radar-wrap" style="padding:30px 0"><div class="radar" style="width:80px;height:80px"><div class="sweep"></div></div><div class="radar-msg">Traçando o plano de voo…</div></div>';
+  const kbText = kb.map(e=>`[${catLabel[e.cat]}] ${e.text}`).join('\n');
+  const prompt = `Você é o Azuli, IA da Azul. Com base no projeto e no relatório de auditoria abaixo, gere um PLANO DE VOO: o caminho recomendado, passo a passo, para este Tripulante levar o projeto da situação atual até o lançamento alinhado à marca.
+${COMPANY_FACTS}
+DIRETRIZES DA MARCA:\n${kbText}
+PROJETO: ${currentProject.titulo} (setor ${currentProject.setor}). Descrição: ${currentProject.desc}. Público: ${currentProject.publico}.
+AUDITORIA: score ${currentReport.score}/100, status ${currentReport.status}. Desvios: ${(currentReport.violacoes||[]).map(v=>v.titulo+' ('+v.severidade+')').join('; ')||'nenhum'}.
+Responda APENAS com JSON válido, sem markdown: {"etapas":[{"titulo":"<curto>","descricao":"<máx 22 palavras, acionável>","responsavel":"<quem envolver>","prazo":"<estimativa curta ex: 1 semana>"}]}
+Regras: 4 a 6 etapas, começando por corrigir os desvios (se houver), passando por validação com marketing, piloto quando fizer sentido, e terminando no lançamento com comunicação alinhada. Personalize para ESTE projeto — nada genérico.`;
+  try{
+    const resp = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content:prompt}]})
+    });
+    const data = await resp.json();
+    if(data.error) throw new Error('API: '+(data.error.message||''));
+    let t=(data.content||[]).map(i=>i.text||'').join('');
+    const a=t.indexOf('{'), b=t.lastIndexOf('}');
+    const plan=JSON.parse(t.slice(a,b+1));
+    z.innerHTML = `<h3 style="font-size:17px;color:#fff;margin:28px 0 16px">🗺 Plano de Voo — “${esc(currentProject.titulo)}”</h3>`+
+      plan.etapas.map((e,i)=>`
+      <div class="fp-step">
+        <div class="fp-num">${i+1}</div>
+        <div class="fp-body">
+          <h4>${esc(e.titulo)}</h4>
+          <p>${esc(e.descricao)}</p>
+          <div class="fp-meta">👥 ${esc(e.responsavel||'—')} &nbsp;·&nbsp; ⏱ ${esc(e.prazo||'—')}</div>
+        </div>
+      </div>`).join('')+
+      `<p style="font-size:12.5px;color:var(--muted);margin-top:4px">Dica: abra o copiloto para detalhar qualquer etapa.</p>`;
+  }catch(e){
+    z.innerHTML='<div class="err-banner">Não foi possível traçar o plano agora ('+esc(e.message||e)+'). Tente novamente.</div>';
+  }
+}
+
+/* ---------- relatório ---------- */
+function scoreColor(s){ return s>=85?'var(--verde)':(s>=60?'var(--amarelo)':'var(--vermelho)'); }
+function renderReport(){
+  if($('fp-zone')) $('fp-zone').innerHTML='';
+  const r=currentReport, p=currentProject;
+  const dims=[['Identidade visual',r.dimensoes.identidade_visual],['Tom de voz',r.dimensoes.tom_de_voz],['Valores',r.dimensoes.valores],['Terminologia',r.dimensoes.terminologia],['Clareza',r.dimensoes.clareza!==undefined?r.dimensoes.clareza:'—']].filter(d=>d[1]!=='—');
+  const statusBg = r.status==='APROVADO' ? 'background:rgba(52,229,138,.12);color:#5CE39A;border:1px solid rgba(52,229,138,.4)' : (r.status==='REPROVADO'?'background:rgba(255,92,102,.12);color:#FF8A93;border:1px solid rgba(255,92,102,.4)':'background:rgba(255,211,77,.12);color:#FFD34D;border:1px solid rgba(255,211,77,.4)');
+  $('report-zone').innerHTML=`
+  <div class="bpass">
+    <div class="bpass-head">
+      <div><div class="label">Passageiro (ideia)</div><div class="value">${esc(p.titulo)}</div></div>
+      <div><div class="label">Portão (setor)</div><div class="value">${esc(p.setor)}</div></div>
+      <div><div class="label">Destino</div><div class="value">Marca alinhada</div></div>
+      <div><div class="label">Cia</div><div class="value">AZULI ✈</div></div>
+    </div>
+    <div class="bpass-body">
+      <div class="scorebox">
+        <div class="score-num" style="color:${scoreColor(r.score)}">${r.score}</div>
+        <div class="score-label">Score de alinhamento /100</div>
+      </div>
+      <div>
+        ${dims.map(d=>`
+          <div class="dim">
+            <div class="dim-top"><span>${d[0]}</span><span>${d[1]}</span></div>
+            <div class="bar"><div class="fill" style="width:0%;background:${scoreColor(d[1])}" data-w="${d[1]}"></div></div>
+          </div>`).join('')}
+      </div>
+    </div>
+    <div class="bpass-foot">
+      <span class="status-chip" style="${statusBg}">${esc(r.status)}</span>
+      <p style="font-size:13.5px;color:var(--muted);max-width:560px;line-height:1.6">${esc(r.resumo)}</p>
+    </div>
+  </div>`;
+  requestAnimationFrame(()=>setTimeout(()=>{
+    document.querySelectorAll('.fill').forEach(f=>f.style.width=f.dataset.w+'%');
+  },80));
+
+  $('vio-zone').innerHTML = (r.violacoes&&r.violacoes.length)
+    ? `<h3 style="font-size:17px;color:#fff;margin-bottom:14px">Desvios identificados (${r.violacoes.length})</h3>`+
+      r.violacoes.map(v=>`
+      <div class="vio" style="border-color:${v.severidade==='alta'?'var(--vermelho)':(v.severidade==='media'?'var(--amarelo)':'var(--azul)')}">
+        <div class="vio-head"><span class="sev sev-${v.severidade}">${v.severidade}</span><h4>${esc(v.titulo)}</h4></div>
+        <p>${esc(v.detalhe)}</p>
+        <div class="fix">💡 <span>${esc(v.correcao)}</span></div>
+      </div>`).join('')
+    : `<div class="vio" style="border-color:var(--verde)"><div class="vio-head"><span class="sev" style="background:rgba(52,229,138,.12);color:#5CE39A;border:1px solid rgba(52,229,138,.4)">limpo</span><h4>Nenhum desvio encontrado</h4></div><p>Sua ideia decola sem restrições. Excelência: seja impecável no que faz. ✅</p></div>`;
+
+  $('answers-zone').innerHTML = r.respostas
+    ? `<div class="card" style="margin-top:18px;border-left:4px solid var(--azul)"><h3 style="font-size:15px;color:#fff;margin-bottom:8px">✉ Respostas às suas perguntas</h3><p style="font-size:14px;line-height:1.7;white-space:pre-wrap">${esc(r.respostas)}</p></div>` : '';
+}
+
+/* ---------- copiloto ---------- */
+function startChat(){
+  $('chat-proj').textContent = '“'+currentProject.titulo+'”';
+  chatHistory=[];
+  $('chat-log').innerHTML='';
+  aiBubble(`Olá, ${user.name.split(' ')[0]}! Sou o Azuli, seu copiloto no projeto “${currentProject.titulo}”. Já tenho o relatório aqui: score ${currentReport.score}/100, status ${currentReport.status}. Por onde começamos — quer atacar primeiro os desvios apontados ou evoluir alguma parte da ideia?`);
+  show('screen-chat');
+}
+function userBubble(t){ $('chat-log').insertAdjacentHTML('beforeend',`<div class="msg user">${esc(t)}</div>`); scrollLog(); }
+function aiBubble(t){ $('chat-log').insertAdjacentHTML('beforeend',`<div class="msg ai"><div class="who">Azuli</div>${esc(t)}</div>`); scrollLog(); }
+function scrollLog(){ const l=$('chat-log'); l.scrollTop=l.scrollHeight; }
+
+async function sendMsg(){
+  const inp=$('chat-in'); const text=inp.value.trim();
+  if(!text) return;
+  inp.value='';
+  userBubble(text);
+  chatHistory.push({role:'user',content:text});
+  $('chat-log').insertAdjacentHTML('beforeend',`<div class="msg ai" id="typing"><div class="typing"><span></span><span></span><span></span></div></div>`); scrollLog();
+
+  const kbText = kb.map(e=>`[${catLabel[e.cat]}] ${e.text}`).join('\n');
+  const system = `Você é o Azuli, copiloto de IA da Azul Linhas Aéreas. Você domina três frentes: (1) responder perguntas complexas sobre a companhia usando os fatos institucionais abaixo; (2) orientar sobre boas práticas gerais de criação e gestão de projetos internos (brief, stakeholders, cronograma, piloto, KPIs); (3) guiar melhorias do projeto atual mantendo-o alinhado à marca até a conclusão. Se pedirem um caminho ou próximos passos, responda com uma sequência numerada, curta e acionável. Responda sempre em português, de forma concisa (máx ~150 palavras), prática e no tom caloroso da Azul. Se não souber um fato, diga que não tem essa informação — não invente.
+${COMPANY_FACTS}
+DIRETRIZES DA MARCA:\n${kbText}
+PROJETO EM DESENVOLVIMENTO: ${currentProject.titulo} (setor ${currentProject.setor}). Descrição: ${currentProject.desc}. Público: ${currentProject.publico}.
+ÚLTIMO RELATÓRIO DE AUDITORIA: score ${currentReport.score}/100, status ${currentReport.status}. Resumo: ${currentReport.resumo}. Desvios: ${(currentReport.violacoes||[]).map(v=>v.titulo).join('; ')||'nenhum'}.`;
+
+  try{
+    const resp = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-6', max_tokens:1000,
+        messages:[{role:'user',content:system},{role:'assistant',content:'Entendido. Sou o Azuli e vou guiar o desenvolvimento do projeto mantendo o alinhamento com a marca Azul.'},...chatHistory]
+      })
+    });
+    const data=await resp.json();
+    if(data.error){ throw new Error('API: '+(data.error.message||JSON.stringify(data.error))); }
+    const reply=(data.content||[]).map(i=>i.text||'').join('').trim()||'(resposta vazia — tente de novo)';
+    const t1=document.getElementById('typing'); if(t1) t1.remove();
+    aiBubble(reply);
+    chatHistory.push({role:'assistant',content:reply});
+  }catch(e){
+    const t2=document.getElementById('typing'); if(t2) t2.remove();
+    aiBubble('A torre perdeu o sinal. Detalhe: '+(e.message||e)+' — se estiver rodando fora do Claude, a IA não conecta; tente reenviar.');
+    console.error(e);
+  }
+}
+</script>
+</body>
+</html>
